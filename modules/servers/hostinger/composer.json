@@ -1,0 +1,11 @@
+{
+  "name": "hostinger/hostinger-whmcs-module",
+  "description": "A WHMCS server module for Hostinger that enables service provisioning and management through the Hostinger API",
+  "type": "project",
+  "require": {
+    "php": "^8.2",
+    "hostinger/api-php-sdk": "^0.0.41"
+  },
+  "license": "MIT",
+  "minimum-stability": "beta"
+}

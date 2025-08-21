@@ -1,0 +1,30 @@
+{
+  "schema": "1.0",
+  "type": "whmcs-servers",
+  "name": "Hostinger",
+  "license": "MIT",
+  "category": "vpscloud",
+  "description": {
+    "name": "Hostinger VPS",
+    "tagline": "Hostinger WHMCS module for VPS provisioning and management",
+    "long": "WHMCS server module for Hostinger that enables service provisioning and management through the Hostinger API for VPS services.",
+    "features": [
+      "VPS provisioning",
+      "VPS management"
+    ]
+  },
+  "logo": {
+    "filename": "logo.png"
+  },
+  "support": {
+    "homepage": "https://github.com/hostinger/api-whmcs-plugin/",
+    "email": "devs@hostinger.com",
+    "docs_url": "https:\/\/developers.hostinger.com\/"
+  },
+  "authors": [
+    {
+      "name": "Hostinger",
+      "homepage": "https:\/\/www.hostinger.com\/"
+    }
+  ]
+}
