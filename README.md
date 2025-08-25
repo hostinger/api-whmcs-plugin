@@ -1,4 +1,4 @@
-# Hostinger WHMCS Plugin
+# Hostinger WHMCS Module
 
 Integrate Hostinger VPS/Cloud services directly into your WHMCS billing system. Automate provisioning, management, and billing with seamless API connectivity. 🚀
 
