@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/../../../init.php';
 require_once __DIR__ . '/../../../includes/functions.php';
+require_once __DIR__ . '/functions.php';
 
 use WHMCS\Database\Capsule;
 
