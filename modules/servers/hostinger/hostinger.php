@@ -105,32 +105,42 @@ function hostinger_AdminCustomButtonArray(): array
  */
 function hostinger_UsageUpdate(array $params): void
 {
-    try {
-        $apiClient = new VPSVirtualMachineApi(config: getHostingerApiConfig($params));
-        $response = $apiClient->getMetricsV1(
-            virtualMachineId: getHostingerVirtualMachineId($params),
-            dateFrom: new DateTime('-1 day'),
-            dateTo: new DateTime(),
-        );
+    $apiClient = new VPSVirtualMachineApi(config: getHostingerApiConfig($params));
 
-        $diskUsageArray = (array) $response->getDiskSpace()->getUsage();
-        $incomingTrafficArray = (array) $response->getIncomingTraffic()->getUsage();
-        $outgoingTrafficArray = (array) $response->getOutgoingTraffic()->getUsage();
-        $latestDiskUsage = array_pop($diskUsageArray);
-        $latestIncomingTraffic = array_pop($incomingTrafficArray);
-        $latestOutgoingTraffic = array_pop($outgoingTrafficArray);
+    $servers = Capsule::table('tblhosting')
+        ->where('server', $params['serverid'])
+        ->get();
 
-        Capsule::table('tblhosting')
-            ->where('server', $params['serverid'])
-            ->update([
-                'diskusage' => $latestDiskUsage / 1024 / 1024 ?? $params['diskusage'],
-                'bwusage' => ($latestIncomingTraffic + $latestOutgoingTraffic) / 1024 / 1024 ?? $params['bwusage'],
-                'lastupdate' => Capsule::raw('now()'),
-            ]);
-    } catch (Throwable $e) {
-        logModuleCall('hostinger', __FUNCTION__, $params, $e->getMessage(), $e->getTraceAsString());
+    foreach ($servers as $server) {
+        $serverId = (int) $server->subscriptionid ?? null;
+        if (!$serverId) {
+            continue;
+        }
 
-        throw $e;
+        try {
+            $response = $apiClient->getMetricsV1(
+                virtualMachineId: $serverId,
+                dateFrom: new DateTime('-1 day'),
+                dateTo: new DateTime(),
+            );
+
+            $diskUsageArray = (array)$response->getDiskSpace()->getUsage();
+            $incomingTrafficArray = (array)$response->getIncomingTraffic()->getUsage();
+            $outgoingTrafficArray = (array)$response->getOutgoingTraffic()->getUsage();
+            $latestDiskUsage = array_pop($diskUsageArray);
+            $latestIncomingTraffic = array_pop($incomingTrafficArray);
+            $latestOutgoingTraffic = array_pop($outgoingTrafficArray);
+
+            Capsule::table('tblhosting')
+                ->where('server', $params['serverid'])
+                ->update([
+                    'diskusage'  => $latestDiskUsage / 1024 / 1024 ?? $params['diskusage'],
+                    'bwusage'    => ($latestIncomingTraffic + $latestOutgoingTraffic) / 1024 / 1024 ?? $params['bwusage'],
+                    'lastupdate' => Capsule::raw('now()'),
+                ]);
+        } catch (Throwable $e) {
+            logModuleCall('hostinger', __FUNCTION__, $params, $e->getMessage(), $e->getTraceAsString());
+        }
     }
 }
 

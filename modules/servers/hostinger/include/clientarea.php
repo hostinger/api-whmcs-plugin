@@ -149,8 +149,8 @@ function hostinger_ClientAreaSetNameservers(array $params, array $details = []):
 {
     $error = null;
 
-    if (!empty($_POST)) {
-        $error = hostinger_SetNameservers($params, $_POST['ns1'], $_POST['ns2']);
+    if (!empty($_POST['ns1'])) {
+        $error = hostinger_SetNameservers($params, $_POST['ns1'], $_POST['ns2'] ?? null);
         if ($error === 'success') {
             markHostingerServerDetailsObsolete($params);
             makeRedirect(makeActionLink($params, 'SetNameservers'));
@@ -171,7 +171,7 @@ function hostinger_ClientAreaChangeRootPassword(array $params, array $details = 
 {
     $error = null;
 
-    if (!empty($_POST)) {
+    if (!empty($_POST['password'])) {
         $error = hostinger_ChangeRootPassword($params, $_POST['password']);
         if ($error === 'success') {
             markHostingerServerDetailsObsolete($params);
@@ -191,7 +191,7 @@ function hostinger_ClientAreaChangePanelPassword(array $params, array $details =
 {
     $error = null;
 
-    if (!empty($_POST)) {
+    if (!empty($_POST['password'])) {
         $error = hostinger_ChangePanelPassword($params, $_POST['password']);
         if ($error === 'success') {
             markHostingerServerDetailsObsolete($params);
