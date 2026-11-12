@@ -25,6 +25,7 @@
                 <td>{$backup->format('Y-m-d H:i:s')}</td>
                 <td>
                   <form action="{$currentpagelinkback}" method="post" class="text-center" onsubmit="return confirm('This action will overwrite all the data on the server. Are you sure?')">
+                    <input type="hidden" name="token" value="{$token}" />
                     <input type="hidden" name="backup_id" value="{$id}" />
                     <button class="btn btn-xs btn-primary" type="submit"><i class="fa fa-sync-alt"></i> Restore</button>
                   </form>

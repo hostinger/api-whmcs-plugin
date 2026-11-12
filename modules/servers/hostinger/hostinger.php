@@ -107,39 +107,28 @@ function hostinger_UsageUpdate(array $params): void
 {
     $apiClient = new VPSVirtualMachineApi(config: getHostingerApiConfig($params));
 
-    $servers = Capsule::table('tblhosting')
+    $services = Capsule::table('tblhosting')
         ->where('server', $params['serverid'])
         ->get();
 
-    foreach ($servers as $server) {
-        $serverId = (int) $server->subscriptionid ?? null;
-        if (!$serverId) {
+    foreach ($services as $service) {
+        $virtualMachineId = (int) $service->subscriptionid;
+        if (!$virtualMachineId) {
             continue;
         }
 
         try {
             $response = $apiClient->getMetricsV1(
-                virtualMachineId: $serverId,
+                virtualMachineId: $virtualMachineId,
                 dateFrom: new DateTime('-1 day'),
                 dateTo: new DateTime(),
             );
 
-            $diskUsageArray = (array)$response->getDiskSpace()->getUsage();
-            $incomingTrafficArray = (array)$response->getIncomingTraffic()->getUsage();
-            $outgoingTrafficArray = (array)$response->getOutgoingTraffic()->getUsage();
-            $latestDiskUsage = array_pop($diskUsageArray);
-            $latestIncomingTraffic = array_pop($incomingTrafficArray);
-            $latestOutgoingTraffic = array_pop($outgoingTrafficArray);
-
             Capsule::table('tblhosting')
-                ->where('server', $params['serverid'])
-                ->update([
-                    'diskusage'  => $latestDiskUsage / 1024 / 1024 ?? $params['diskusage'],
-                    'bwusage'    => ($latestIncomingTraffic + $latestOutgoingTraffic) / 1024 / 1024 ?? $params['bwusage'],
-                    'lastupdate' => Capsule::raw('now()'),
-                ]);
+                ->where('id', $service->id)
+                ->update(getHostingerUsageUpdate($response));
         } catch (Throwable $e) {
-            logModuleCall('hostinger', __FUNCTION__, $params, $e->getMessage(), $e->getTraceAsString());
+            logHostingerError(__FUNCTION__, $params, $e);
         }
     }
 }
@@ -175,7 +164,7 @@ function hostinger_CreateAccount(array $params): string
 
         saveHostingerServerParameters($params, $response->getVirtualMachine());
     } catch (Throwable $e) {
-        logModuleCall('hostinger', __FUNCTION__, $params, $e->getMessage(), $e->getTraceAsString());
+        logHostingerError(__FUNCTION__, $params, $e);
 
         return extractErrorFromThrowable($e);
     }
@@ -189,7 +178,7 @@ function hostinger_SuspendAccount(array $params): string
         $apiClient = new VPSVirtualMachineApi(config: getHostingerApiConfig($params));
         $apiClient->stopVirtualMachineV1(getHostingerVirtualMachineId($params));
     } catch (Throwable $e) {
-        logModuleCall('hostinger', __FUNCTION__, $params, $e->getMessage(), $e->getTraceAsString());
+        logHostingerError(__FUNCTION__, $params, $e);
 
         return extractErrorFromThrowable($e);
     }
@@ -203,7 +192,7 @@ function hostinger_UnsuspendAccount(array $params): string
         $apiClient = new VPSVirtualMachineApi(config: getHostingerApiConfig($params));
         $apiClient->startVirtualMachineV1(getHostingerVirtualMachineId($params));
     } catch (Throwable $e) {
-        logModuleCall('hostinger', __FUNCTION__, $params, $e->getMessage(), $e->getTraceAsString());
+        logHostingerError(__FUNCTION__, $params, $e);
 
         return extractErrorFromThrowable($e);
     }
@@ -225,7 +214,7 @@ function hostinger_TerminateAccount(array $params): string
             billingV1SubscriptionCancelRequest: (new BillingV1SubscriptionCancelRequest())
         );
     } catch (Throwable $e) {
-        logModuleCall('hostinger', __FUNCTION__, $params, $e->getMessage(), $e->getTraceAsString());
+        logHostingerError(__FUNCTION__, $params, $e);
 
         return extractErrorFromThrowable($e);
     }
@@ -248,7 +237,7 @@ function hostinger_ChangeRootPassword(array $params, string $password): string
         $params['model']->password = $result['password'];
         $params['model']->save();
     } catch (Throwable $e) {
-        logModuleCall('hostinger', __FUNCTION__, $params, $e->getMessage(), $e->getTraceAsString());
+        logHostingerError(__FUNCTION__, $params, $e);
 
         return extractErrorFromThrowable($e);
     }
@@ -266,7 +255,7 @@ function hostinger_ChangePanelPassword(array $params, string $password): string
                 ->setPassword($password),
         );
     } catch (Throwable $e) {
-        logModuleCall('hostinger', __FUNCTION__, $params, $e->getMessage(), $e->getTraceAsString());
+        logHostingerError(__FUNCTION__, $params, $e);
 
         return extractErrorFromThrowable($e);
     }
@@ -280,7 +269,7 @@ function hostinger_Restart(array $params): string
         $apiClient = new VPSVirtualMachineApi(config: getHostingerApiConfig($params));
         $apiClient->restartVirtualMachineV1(getHostingerVirtualMachineId($params));
     } catch (Throwable $e) {
-        logModuleCall('hostinger', __FUNCTION__, $params, $e->getMessage(), $e->getTraceAsString());
+        logHostingerError(__FUNCTION__, $params, $e);
 
         return extractErrorFromThrowable($e);
     }
@@ -298,7 +287,7 @@ function hostinger_SetHostname(array $params, string $hostname): string
                 ->setHostname($hostname),
         );
     } catch (Throwable $e) {
-        logModuleCall('hostinger', __FUNCTION__, $params, $e->getMessage(), $e->getTraceAsString());
+        logHostingerError(__FUNCTION__, $params, $e);
 
         return extractErrorFromThrowable($e);
     }
@@ -318,7 +307,7 @@ function hostinger_Reinstall(array $params, int $templateId, ?string $password =
                 ->setPostInstallScriptId($postInstallScript),
         );
     } catch (Throwable $e) {
-        logModuleCall('hostinger', __FUNCTION__, $params, $e->getMessage(), $e->getTraceAsString());
+        logHostingerError(__FUNCTION__, $params, $e);
 
         return extractErrorFromThrowable($e);
     }
@@ -337,7 +326,7 @@ function hostinger_SetNameservers(array $params, string $ns1, ?string $ns2 = nul
                 ->setNs2($ns2),
         );
     } catch (Throwable $e) {
-        logModuleCall('hostinger', __FUNCTION__, $params, $e->getMessage(), $e->getTraceAsString());
+        logHostingerError(__FUNCTION__, $params, $e);
 
         return extractErrorFromThrowable($e);
     }
@@ -354,7 +343,7 @@ function hostinger_BackupRestore(array $params, int $backupId): string
             $backupId,
         );
     } catch (Throwable $e) {
-        logModuleCall('hostinger', __FUNCTION__, $params, $e->getMessage(), $e->getTraceAsString());
+        logHostingerError(__FUNCTION__, $params, $e);
 
         return extractErrorFromThrowable($e);
     }
@@ -368,7 +357,7 @@ function hostinger_SnapshotCreate(array $params): string
         $apiClient = new VPSSnapshotsApi(config: getHostingerApiConfig($params));
         $apiClient->createSnapshotV1(getHostingerVirtualMachineId($params));
     } catch (Throwable $e) {
-        logModuleCall('hostinger', __FUNCTION__, $params, $e->getMessage(), $e->getTraceAsString());
+        logHostingerError(__FUNCTION__, $params, $e);
 
         return extractErrorFromThrowable($e);
     }
@@ -382,7 +371,7 @@ function hostinger_SnapshotRestore(array $params): string
         $apiClient = new VPSSnapshotsApi(config: getHostingerApiConfig($params));
         $apiClient->restoreSnapshotV1(getHostingerVirtualMachineId($params));
     } catch (Throwable $e) {
-        logModuleCall('hostinger', __FUNCTION__, $params, $e->getMessage(), $e->getTraceAsString());
+        logHostingerError(__FUNCTION__, $params, $e);
 
         return extractErrorFromThrowable($e);
     }
@@ -396,7 +385,7 @@ function hostinger_SnapshotDelete(array $params): string
         $apiClient = new VPSSnapshotsApi(config: getHostingerApiConfig($params));
         $apiClient->deleteSnapshotV1(getHostingerVirtualMachineId($params));
     } catch (Throwable $e) {
-        logModuleCall('hostinger', __FUNCTION__, $params, $e->getMessage(), $e->getTraceAsString());
+        logHostingerError(__FUNCTION__, $params, $e);
 
         return extractErrorFromThrowable($e);
     }
@@ -415,7 +404,7 @@ function hostinger_SetPTRRecords(array $params, int $id, string $domain): string
                 ->setDomain($domain),
         );
     } catch (Throwable $e) {
-        logModuleCall('hostinger', __FUNCTION__, $params, $e->getMessage(), $e->getTraceAsString());
+        logHostingerError(__FUNCTION__, $params, $e);
 
         return extractErrorFromThrowable($e);
     }

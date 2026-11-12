@@ -16,6 +16,7 @@
       {/if}
 
     <form class="form" action="{$currentpagelinkback}" method="post" autocomplete="off">
+      <input type="hidden" name="token" value="{$token}" />
       <div class="form-group">
         <label for="template" class="col-sm-12 control-label">Select operating system <strong class="text-danger">*</strong></label>
         <div class="col-sm-12">

@@ -8,6 +8,8 @@ use GuzzleHttp\Exception\GuzzleException;
 use Hostinger\Api\VPSVirtualMachineApi;
 use Hostinger\ApiException;
 use Hostinger\Configuration;
+use Hostinger\Model\VPSV1MetricsMetricsCollection;
+use Hostinger\Model\VPSV1MetricsMetricsResource;
 use Hostinger\Model\VPSV1VirtualMachineVirtualMachineResource;
 use WHMCS\Database\Capsule;
 use WHMCS\Service\Status;
@@ -150,6 +152,37 @@ function getHostingerServerDetails(array $params, $force = false): array
     ];
 }
 
+function getLatestHostingerMetric(?VPSV1MetricsMetricsResource $metric): ?float
+{
+    $usage = (array) $metric?->getUsage();
+    $latest = array_pop($usage);
+
+    return is_numeric($latest) ? (float) $latest : null;
+}
+
+/**
+ * Builds the tblhosting usage columns from the latest metrics, in MB. A metric
+ * the API didn't return leaves its stored usage untouched instead of zeroing it.
+ */
+function getHostingerUsageUpdate(VPSV1MetricsMetricsCollection $metrics): array
+{
+    $diskUsage = getLatestHostingerMetric($metrics->getDiskSpace());
+    $incomingTraffic = getLatestHostingerMetric($metrics->getIncomingTraffic());
+    $outgoingTraffic = getLatestHostingerMetric($metrics->getOutgoingTraffic());
+
+    $update = ['lastupdate' => Capsule::raw('now()')];
+
+    if ($diskUsage !== null) {
+        $update['diskusage'] = $diskUsage / 1024 / 1024;
+    }
+
+    if ($incomingTraffic !== null || $outgoingTraffic !== null) {
+        $update['bwusage'] = (($incomingTraffic ?? 0) + ($outgoingTraffic ?? 0)) / 1024 / 1024;
+    }
+
+    return $update;
+}
+
 function markHostingerServerDetailsObsolete(array $params): void
 {
     $params['model']->serviceProperties->save([
@@ -179,6 +212,20 @@ function getConfigOption(array $params, string $key): mixed
     $configKey = sprintf('configoption%d', $index + 1);
 
     return $params[$configKey] ?? null;
+}
+
+/**
+ * Writes a failed call to the module log, with the server API token and the
+ * service password masked wherever they appear.
+ */
+function logHostingerError(string $action, array $params, Throwable $e): void
+{
+    $secrets = array_filter(
+        [$params['serverpassword'] ?? null, $params['password'] ?? null, $params['serveraccesshash'] ?? null],
+        fn ($value) => is_string($value) && $value !== '',
+    );
+
+    logModuleCall('hostinger', $action, $params, $e->getMessage(), $e->getTraceAsString(), array_values($secrets));
 }
 
 function extractErrorFromThrowable(Throwable $e): string

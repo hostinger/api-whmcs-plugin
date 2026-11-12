@@ -14,6 +14,7 @@
     </div>
 
     <form class="form" action="{$currentpagelinkback}" method="post" autocomplete="off">
+      <input type="hidden" name="token" value="{$token}" />
       <div class="form-group">
         <label for="ns1" class="col-sm-12 control-label">Name server 1 <strong class="text-danger">*</strong></label>
         <div class="col-sm-12">
