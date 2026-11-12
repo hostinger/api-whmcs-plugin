@@ -10,6 +10,7 @@
   </div>
   <div class="card-body">
     <form class="form" action="{$currentpagelinkback}" method="post" autocomplete="off">
+      <input type="hidden" name="token" value="{$token}" />
       <div class="form-group">
         <label for="ip" class="col-sm-12 control-label">IP Address <strong class="text-danger">*</strong></label>
         <div class="col-sm-12">

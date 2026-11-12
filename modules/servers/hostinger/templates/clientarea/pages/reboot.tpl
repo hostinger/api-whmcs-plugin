@@ -14,6 +14,7 @@
         </div>
 
         <form action="{$currentpagelinkback}" method="post" class="text-center">
+            <input type="hidden" name="token" value="{$token}" />
             <input type="hidden" name="confirm" value="1" />
             <button class="btn btn-primary" type="submit"><i class="fa fa-fw fa-sync-alt"></i> Reboot</button>
         </form>

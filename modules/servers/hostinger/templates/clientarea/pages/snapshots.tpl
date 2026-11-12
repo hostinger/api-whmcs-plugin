@@ -21,6 +21,7 @@
     <div class="row">
       <div class="col">
         <form action="{$currentpagelinkback}" method="post" class="text-center" {if $snapshot}onsubmit="return confirm('This action will overwrite existing snapshot. Are you sure?')"{/if}>
+          <input type="hidden" name="token" value="{$token}" />
           <input type="hidden" name="snapshot" value="create" />
           <button class="btn btn-primary" type="submit"><i class="fa fa-fw fa-camera-retro"></i> Create</button>
         </form>
@@ -28,12 +29,14 @@
         {if $snapshot}
           <div class="col">
             <form action="{$currentpagelinkback}" method="post" class="text-center" onsubmit="return confirm('This action will overwrite all the data on the server. Are you sure?')">
+              <input type="hidden" name="token" value="{$token}" />
               <input type="hidden" name="snapshot" value="restore" />
               <button class="btn btn-warning" type="submit"><i class="fa fa-fw fa-sync-alt"></i> Restore</button>
             </form>
           </div>
           <div class="col">
             <form action="{$currentpagelinkback}" method="post" class="text-center" onsubmit="return confirm('This action will remove created snapshot. Are you sure?')">
+              <input type="hidden" name="token" value="{$token}" />
               <input type="hidden" name="snapshot" value="delete" />
               <button class="btn btn-danger" type="submit"><i class="fa fa-fw fa-trash"></i> Delete</button>
             </form>

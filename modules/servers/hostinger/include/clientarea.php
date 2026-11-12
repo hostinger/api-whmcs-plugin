@@ -52,10 +52,39 @@ function hostinger_ParseClientAreaRequest(array $params): array
     }
 
     if ($action) {
-        return call_user_func(sprintf('hostinger_ClientArea%s', $action), $params, $details);
+        $tokenError = hostinger_DiscardForgedClientAreaPost();
+        $page = call_user_func(sprintf('hostinger_ClientArea%s', $action), $params, $details);
+        $page['templateVariables']['token'] = generate_token('plain');
+        if ($tokenError) {
+            $page['templateVariables']['error'] = $tokenError;
+        }
+
+        return $page;
     }
 
     return hostinger_ClientAreaInformation($params, $details);
+}
+
+/**
+ * Module actions are not covered by WHMCS's own token check, so a POST without
+ * the client's token is dropped before any handler can act on it.
+ *
+ * @return string|null the error to show when the POST was dropped
+ */
+function hostinger_DiscardForgedClientAreaPost(): ?string
+{
+    if (empty($_POST)) {
+        return null;
+    }
+
+    $token = $_POST['token'] ?? null;
+    if (is_string($token) && hash_equals(generate_token('plain'), $token)) {
+        return null;
+    }
+
+    $_POST = [];
+
+    return 'Your session token is invalid or has expired. Please reload the page and try again.';
 }
 
 function hostinger_ClientAreaError(array $params): array
