@@ -181,6 +181,20 @@ function getConfigOption(array $params, string $key): mixed
     return $params[$configKey] ?? null;
 }
 
+/**
+ * Writes a failed call to the module log, with the server API token and the
+ * service password masked wherever they appear.
+ */
+function logHostingerError(string $action, array $params, Throwable $e): void
+{
+    $secrets = array_filter(
+        [$params['serverpassword'] ?? null, $params['password'] ?? null, $params['serveraccesshash'] ?? null],
+        fn ($value) => is_string($value) && $value !== '',
+    );
+
+    logModuleCall('hostinger', $action, $params, $e->getMessage(), $e->getTraceAsString(), array_values($secrets));
+}
+
 function extractErrorFromThrowable(Throwable $e): string
 {
     if ($e instanceof ApiException) {

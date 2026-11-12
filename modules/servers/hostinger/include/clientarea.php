@@ -42,7 +42,7 @@ function hostinger_ParseClientAreaRequest(array $params): array
     try {
         $details = getHostingerServerDetails($params);
     } catch (Throwable $e) {
-        logModuleCall('hostinger', __FUNCTION__, $params, $e->getMessage(), $e->getTraceAsString());
+        logHostingerError(__FUNCTION__, $params, $e);
 
         return hostinger_ClientAreaError($params);
     }
@@ -142,7 +142,7 @@ function hostinger_ClientAreaServerBusy(array $params, array $details = []): arr
             }
         }
     } catch (Throwable $e) {
-        logModuleCall('hostinger', __FUNCTION__, $params, $e->getMessage(), $e->getTraceAsString());
+        logHostingerError(__FUNCTION__, $params, $e);
     }
 
     return [
