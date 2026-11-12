@@ -456,7 +456,7 @@ class PropertyAccessor implements PropertyAccessorInterface
      */
     private function getReadInfo(string $class, string $property): ?PropertyReadInfo
     {
-        $key = str_replace('\\', '.', $class) . 'symfony' .$property;
+        $key = str_replace('\\', '.', $class).'..'.$property;
 
         if (isset($this->readPropertyCache[$key])) {
             return $this->readPropertyCache[$key];
@@ -526,7 +526,7 @@ class PropertyAccessor implements PropertyAccessorInterface
                 $object->$property = $value;
             } elseif (!$this->ignoreInvalidProperty) {
                 if ($mutator->hasErrors()) {
-                    throw new NoSuchPropertyException(implode('. ', $mutator->getErrors()) . 'property-access');
+                    throw new NoSuchPropertyException(implode('. ', $mutator->getErrors()).'.');
                 }
 
                 throw new NoSuchPropertyException(sprintf('Could not determine access type for property "%s" in class "%s".', $property, get_debug_type($object)));
@@ -584,7 +584,7 @@ class PropertyAccessor implements PropertyAccessorInterface
     private function getWriteInfo(string $class, string $property, mixed $value): PropertyWriteInfo
     {
         $useAdderAndRemover = is_iterable($value);
-        $key = str_replace('\\', '.', $class) . 'symfony' .$property.'..'.(int) $useAdderAndRemover;
+        $key = str_replace('\\', '.', $class).'..'.$property.'..'.(int) $useAdderAndRemover;
 
         if (isset($this->writePropertyCache[$key])) {
             return $this->writePropertyCache[$key];

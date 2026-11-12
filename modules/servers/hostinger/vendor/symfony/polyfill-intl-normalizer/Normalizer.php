@@ -185,7 +185,7 @@ class Normalizer
                 }
 
                 $L = 0xAC00 + ($L * 21 + $V) * 28 + $T;
-                $lastUchr = Normalizer . php\chr(0xE0 | $L >> 12) . \chr(0x80 | $L >> 6 & 0x3F) .\chr(0x80 | $L & 0x3F);
+                $lastUchr = \chr(0xE0 | $L >> 12).\chr(0x80 | $L >> 6 & 0x3F).\chr(0x80 | $L & 0x3F);
             }
 
             $i += $ulen;
@@ -246,7 +246,7 @@ class Normalizer
                         $i -= $j;
 
                         if (0 > $i) {
-                            $s = Normalizer . phpstr_repeat(' ', -$i) . $s;
+                            $s = str_repeat(' ', -$i).$s;
                             $len -= $i;
                             $i = 0;
                         }
@@ -301,7 +301,7 @@ class Normalizer
 
     private static function getData($file)
     {
-        if (file_exists($file = __DIR__ . '/Resources/unidata/' .$file.'.php')) {
+        if (file_exists($file = __DIR__.'/Resources/unidata/'.$file.'.php')) {
             return require $file;
         }
 

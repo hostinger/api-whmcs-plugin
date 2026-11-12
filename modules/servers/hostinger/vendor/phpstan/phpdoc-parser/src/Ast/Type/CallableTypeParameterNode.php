@@ -38,7 +38,7 @@ class CallableTypeParameterNode implements Node
 		$isReference = $this->isReference ? '&' : '';
 		$isVariadic = $this->isVariadic ? '...' : '';
 		$isOptional = $this->isOptional ? '=' : '';
-		return CallableTypeParameterNode . phptrim("{$type}{$isReference}{$isVariadic}{$this->parameterName}") . $isOptional;
+		return trim("{$type}{$isReference}{$isVariadic}{$this->parameterName}") . $isOptional;
 	}
 
 }

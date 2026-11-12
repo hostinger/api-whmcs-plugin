@@ -20,9 +20,7 @@
     },
     "autoload": {
         "psr-4": { "Symfony\\Polyfill\\Intl\\Grapheme\\": "" },
-        "files": [
-          "bootstrap.php"
-        ]
+        "files": [ "bootstrap.php" ]
     },
     "suggest": {
         "ext-intl": "For best performance"
