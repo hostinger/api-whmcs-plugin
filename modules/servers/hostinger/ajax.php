@@ -65,10 +65,36 @@ switch ($action) {
         die(json_encode(['success' => false, 'error' => 'Invalid action']));
 }
 
+/**
+ * These lists are the same for every visitor and rarely change, so they are
+ * cached per WHMCS server for an hour to keep page loads from spending the
+ * reseller's API rate limit. Without WHMCS's TransientData the loader is
+ * called directly.
+ */
+function getCachedHostingerList(string $name, array $params, callable $load): array
+{
+    if (!class_exists(\WHMCS\TransientData::class)) {
+        return $load();
+    }
+
+    $key = "hostinger_{$name}_{$params['serverid']}";
+    $cache = \WHMCS\TransientData::getInstance();
+    $cached = $cache->retrieve($key);
+    $data = is_string($cached) ? json_decode($cached, true) : null;
+    if (is_array($data)) {
+        return $data;
+    }
+
+    $data = $load();
+    $cache->store($key, json_encode($data), 3600);
+
+    return $data;
+}
+
 function handleGetDataCenters(array $params): void
 {
     try {
-        $data = hostinger_DataCenterLoader($params);
+        $data = getCachedHostingerList('datacenters', $params, fn () => hostinger_DataCenterLoader($params));
 
         echo json_encode([
             'success' => true,
@@ -86,7 +112,7 @@ function handleGetDataCenters(array $params): void
 function handleGetTemplates(array $params): void
 {
     try {
-        $data = hostinger_OSTemplateLoader($params);
+        $data = getCachedHostingerList('templates', $params, fn () => hostinger_OSTemplateLoader($params));
 
         echo json_encode([
             'success' => true,
