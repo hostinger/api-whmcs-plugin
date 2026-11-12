@@ -8,6 +8,8 @@ use GuzzleHttp\Exception\GuzzleException;
 use Hostinger\Api\VPSVirtualMachineApi;
 use Hostinger\ApiException;
 use Hostinger\Configuration;
+use Hostinger\Model\VPSV1MetricsMetricsCollection;
+use Hostinger\Model\VPSV1MetricsMetricsResource;
 use Hostinger\Model\VPSV1VirtualMachineVirtualMachineResource;
 use WHMCS\Database\Capsule;
 use WHMCS\Service\Status;
@@ -148,6 +150,37 @@ function getHostingerServerDetails(array $params, $force = false): array
         'server' => $params['model'],
         'actions_lock' => $actionsLock,
     ];
+}
+
+function getLatestHostingerMetric(?VPSV1MetricsMetricsResource $metric): ?float
+{
+    $usage = (array) $metric?->getUsage();
+    $latest = array_pop($usage);
+
+    return is_numeric($latest) ? (float) $latest : null;
+}
+
+/**
+ * Builds the tblhosting usage columns from the latest metrics, in MB. A metric
+ * the API didn't return leaves its stored usage untouched instead of zeroing it.
+ */
+function getHostingerUsageUpdate(VPSV1MetricsMetricsCollection $metrics): array
+{
+    $diskUsage = getLatestHostingerMetric($metrics->getDiskSpace());
+    $incomingTraffic = getLatestHostingerMetric($metrics->getIncomingTraffic());
+    $outgoingTraffic = getLatestHostingerMetric($metrics->getOutgoingTraffic());
+
+    $update = ['lastupdate' => Capsule::raw('now()')];
+
+    if ($diskUsage !== null) {
+        $update['diskusage'] = $diskUsage / 1024 / 1024;
+    }
+
+    if ($incomingTraffic !== null || $outgoingTraffic !== null) {
+        $update['bwusage'] = (($incomingTraffic ?? 0) + ($outgoingTraffic ?? 0)) / 1024 / 1024;
+    }
+
+    return $update;
 }
 
 function markHostingerServerDetailsObsolete(array $params): void

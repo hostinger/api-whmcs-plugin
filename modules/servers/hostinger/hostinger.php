@@ -107,37 +107,26 @@ function hostinger_UsageUpdate(array $params): void
 {
     $apiClient = new VPSVirtualMachineApi(config: getHostingerApiConfig($params));
 
-    $servers = Capsule::table('tblhosting')
+    $services = Capsule::table('tblhosting')
         ->where('server', $params['serverid'])
         ->get();
 
-    foreach ($servers as $server) {
-        $serverId = (int) $server->subscriptionid ?? null;
-        if (!$serverId) {
+    foreach ($services as $service) {
+        $virtualMachineId = (int) $service->subscriptionid;
+        if (!$virtualMachineId) {
             continue;
         }
 
         try {
             $response = $apiClient->getMetricsV1(
-                virtualMachineId: $serverId,
+                virtualMachineId: $virtualMachineId,
                 dateFrom: new DateTime('-1 day'),
                 dateTo: new DateTime(),
             );
 
-            $diskUsageArray = (array)$response->getDiskSpace()->getUsage();
-            $incomingTrafficArray = (array)$response->getIncomingTraffic()->getUsage();
-            $outgoingTrafficArray = (array)$response->getOutgoingTraffic()->getUsage();
-            $latestDiskUsage = array_pop($diskUsageArray);
-            $latestIncomingTraffic = array_pop($incomingTrafficArray);
-            $latestOutgoingTraffic = array_pop($outgoingTrafficArray);
-
             Capsule::table('tblhosting')
-                ->where('server', $params['serverid'])
-                ->update([
-                    'diskusage'  => $latestDiskUsage / 1024 / 1024 ?? $params['diskusage'],
-                    'bwusage'    => ($latestIncomingTraffic + $latestOutgoingTraffic) / 1024 / 1024 ?? $params['bwusage'],
-                    'lastupdate' => Capsule::raw('now()'),
-                ]);
+                ->where('id', $service->id)
+                ->update(getHostingerUsageUpdate($response));
         } catch (Throwable $e) {
             logHostingerError(__FUNCTION__, $params, $e);
         }
