@@ -225,7 +225,23 @@ function logHostingerError(string $action, array $params, Throwable $e): void
         fn ($value) => is_string($value) && $value !== '',
     );
 
-    logModuleCall('hostinger', $action, $params, $e->getMessage(), $e->getTraceAsString(), array_values($secrets));
+    logModuleCall('hostinger', $action, $params, $e->getMessage(), formatTraceWithoutArgs($e), array_values($secrets));
+}
+
+/**
+ * Like getTraceAsString(), but without call arguments, which can carry
+ * passwords that the masking above cannot match (PHP truncates them).
+ */
+function formatTraceWithoutArgs(Throwable $e): string
+{
+    $lines = [];
+    foreach ($e->getTrace() as $i => $frame) {
+        $location = isset($frame['file']) ? "{$frame['file']}({$frame['line']})" : '[internal function]';
+        $lines[] = "#{$i} {$location}: " . ($frame['class'] ?? '') . ($frame['type'] ?? '') . "{$frame['function']}()";
+    }
+    $lines[] = '#' . count($lines) . ' {main}';
+
+    return implode("\n", $lines);
 }
 
 function extractErrorFromThrowable(Throwable $e): string
