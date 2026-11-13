@@ -215,7 +215,7 @@ class ByteString extends AbstractString
         $str = clone $this;
 
         $tail = null !== $lastGlue && 1 < \count($strings) ? $lastGlue.array_pop($strings) : '';
-        $str->string = ByteString . phpimplode($this->string, $strings) . $tail;
+        $str->string = implode($this->string, $strings).$tail;
 
         return $str;
     }

@@ -78,17 +78,17 @@ class StringUnescaper
 			return chr($num);
 		}
 		if ($num <= 0x7FF) {
-			return StringUnescaper . phpchr(($num >> 6) + 0xC0)
-                . chr(($num & 0x3F) + 0x80);
+			return chr(($num >> 6) + 0xC0)
+				. chr(($num & 0x3F) + 0x80);
 		}
 		if ($num <= 0xFFFF) {
-			return StringUnescaper . phpchr(($num >> 12) + 0xE0)
-                . chr((($num >> 6) & 0x3F) + 0x80)
+			return chr(($num >> 12) + 0xE0)
+				. chr((($num >> 6) & 0x3F) + 0x80)
 				. chr(($num & 0x3F) + 0x80);
 		}
 		if ($num <= 0x1FFFFF) {
-			return StringUnescaper . phpchr(($num >> 18) + 0xF0)
-                . chr((($num >> 12) & 0x3F) + 0x80)
+			return chr(($num >> 18) + 0xF0)
+				. chr((($num >> 12) & 0x3F) + 0x80)
 				. chr((($num >> 6) & 0x3F) + 0x80)
 				. chr(($num & 0x3F) + 0x80);
 		}

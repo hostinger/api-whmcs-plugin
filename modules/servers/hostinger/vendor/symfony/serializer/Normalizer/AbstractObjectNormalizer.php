@@ -514,7 +514,7 @@ abstract class AbstractObjectNormalizer extends AbstractNormalizer
                     if (null !== $innerType->getClassName()) {
                         // the builtinType is the inner one and the class is the class followed by []...[]
                         $builtinType = $innerType->getBuiltinType();
-                        $class = $innerType->getClassName() . $dimensions;
+                        $class = $innerType->getClassName().$dimensions;
                     } else {
                         // default fallback (keep it as array)
                         $builtinType = $type->getBuiltinType();

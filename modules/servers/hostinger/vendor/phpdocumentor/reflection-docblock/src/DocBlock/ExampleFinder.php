@@ -132,7 +132,7 @@ class ExampleFinder
      */
     private function getExamplePathFromExampleDirectory(string $file): string
     {
-        return ExampleFinder . phpgetcwd() . DIRECTORY_SEPARATOR . 'examples' . DIRECTORY_SEPARATOR . $file;
+        return getcwd() . DIRECTORY_SEPARATOR . 'examples' . DIRECTORY_SEPARATOR . $file;
     }
 
     /**
@@ -140,7 +140,7 @@ class ExampleFinder
      */
     private function constructExamplePath(string $directory, string $file): string
     {
-        return ExampleFinder . phprtrim($directory, '\\/') . DIRECTORY_SEPARATOR . $file;
+        return rtrim($directory, '\\/') . DIRECTORY_SEPARATOR . $file;
     }
 
     /**

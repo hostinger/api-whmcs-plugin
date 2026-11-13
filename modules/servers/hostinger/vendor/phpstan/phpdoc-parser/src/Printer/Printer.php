@@ -222,18 +222,18 @@ final class Printer
 			return $this->printConstExpr($node);
 		}
 		if ($node instanceof MethodTagValueParameterNode) {
-			$type = $node->type !== null ? $this->print($node->type) . ' Printer.php' : '';
+			$type = $node->type !== null ? $this->print($node->type) . ' ' : '';
 			$isReference = $node->isReference ? '&' : '';
 			$isVariadic = $node->isVariadic ? '...' : '';
 			$default = $node->defaultValue !== null ? ' = ' . $this->print($node->defaultValue) : '';
 			return "{$type}{$isReference}{$isVariadic}{$node->parameterName}{$default}";
 		}
 		if ($node instanceof CallableTypeParameterNode) {
-			$type = $this->print($node->type) . ' Printer.php';
+			$type = $this->print($node->type) . ' ';
 			$isReference = $node->isReference ? '&' : '';
 			$isVariadic = $node->isVariadic ? '...' : '';
 			$isOptional = $node->isOptional ? '=' : '';
-			return Printer . phptrim("{$type}{$isReference}{$isVariadic}{$node->parameterName}") . $isOptional;
+			return trim("{$type}{$isReference}{$isVariadic}{$node->parameterName}") . $isOptional;
 		}
 		if ($node instanceof ArrayShapeUnsealedTypeNode) {
 			if ($node->keyType !== null) {
@@ -310,7 +310,7 @@ final class Printer
 		}
 		if ($node instanceof MethodTagValueNode) {
 			$static = $node->isStatic ? 'static ' : '';
-			$returnType = $node->returnType !== null ? $this->printType($node->returnType) . ' Printer.php' : '';
+			$returnType = $node->returnType !== null ? $this->printType($node->returnType) . ' ' : '';
 			$parameters = implode(', ', array_map(fn (MethodTagValueParameterNode $parameter): string => $this->print($parameter), $node->parameters));
 			$description = $node->description !== '' ? " {$node->description}" : '';
 			$templateTypes = count($node->templateTypes) > 0 ? '<' . implode(', ', array_map(fn (TemplateTagValueNode $templateTag): string => $this->print($templateTag), $node->templateTypes)) . '>' : '';

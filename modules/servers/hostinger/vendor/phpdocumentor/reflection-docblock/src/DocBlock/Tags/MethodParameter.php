@@ -78,7 +78,7 @@ final class MethodParameter
 
     public function __toString(): string
     {
-        return $this->getType() . ' MethodParameter.php' .
+        return $this->getType() . ' ' .
             ($this->isReference() ? '&' : '') .
             ($this->isVariadic() ? '...' : '') .
             '$' . $this->getName() .
